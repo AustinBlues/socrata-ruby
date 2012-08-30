@@ -76,51 +76,19 @@ class Socrata
 
   protected
     def get_request(path, options = {})
-      if @batching
-        # Batch up the request
-        @batch_queue << {:url => path, :requestType => "GET"}
-      else
-        # Actually execute the request
-        response = @party.get(path, options);
-        check_error! response
-        return response
-      end
+      _request(:get, path, options)
     end
 
     def post_request(path, options = {})
-      if @batching
-        # Batch up the request
-        @batch_queue << {:url => path, :body => options[:body], :requestType => "POST"}
-      else
-        # Actually execute the request
-        response = @party.post(path, options)
-        check_error! response
-        return response
-      end
+      _request(:post, path, options)
     end
 
     def put_request(path, options = {})
-      if @batching
-        # Batch up the request
-        @batch_queue << {:url => path, :body => options[:body], :requestType => "PUT"}
-      else
-        # Actually execute the request
-        response = @party.put(path, options)
-        check_error! response
-        return response
-      end
+      _request(:put, path, options)
     end
 
     def delete_request(path, options = {})
-      if @batching
-        # Batch up the request
-        @batch_queue << {:url => path, :body => options[:body], :requestType => "DELETE"}
-      else
-        # Actually execute the request
-        response = @party.delete(path, options)
-        check_error! response
-        return response
-      end
+      _request(:delete, path, options)
     end
 
     # Flush a queued batch of requests
@@ -174,4 +142,17 @@ class Socrata
       return JSON.parse(c.body_str)
     end
 
+  private
+    def _request(verb, path, options)
+      puts "_REQUEST(#{verb.inspect}, #{path}, #{options.inspect})."
+      if @batching
+        # Batch up the request
+        @batch_queue << {:url => path, :requestType => verb.to_s.upcase!}
+      else
+        # Actually execute the request
+        response = @party.send(verb, path, options);
+        check_error! response
+        return response
+      end
+    end
 end
